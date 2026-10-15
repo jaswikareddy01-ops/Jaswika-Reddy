@@ -1,0 +1,24 @@
+import { useState } from 'react'
+import type { ReactNode } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { LayoutDashboard, ListTodo, FileText, Bell, Settings, LogOut, ShieldCheck, ChevronRight, Menu, X, CircleHelp, Cpu } from 'lucide-react'
+import { authClient } from '@/lib/auth-client'
+import { useAction } from '@/lib/actions'
+import type { getWorkspace } from '@/server/workspace'
+import { Modal } from './Modal'
+import { VoiceControls } from './Voice'
+export type Workspace = NonNullable<Awaited<ReturnType<typeof getWorkspace>>>
+export function AppShell({ workspace, page, children }: { workspace: Workspace | null; page: string; children: ReactNode }) {
+  const [menu, setMenu] = useState(false)
+  const [help, setHelp] = useState(false)
+  const navigate = useNavigate()
+  const signout = useAction(() => authClient.signOut(), { onSuccess: () => navigate({ to: '/login' }) })
+  const name = workspace?.profile?.name ?? workspace?.user.name ?? 'Alex Morgan'
+  const nav = [{ to: '/', label: 'Dashboard', icon: LayoutDashboard }, { to: '/tasks', label: 'Tasks', icon: ListTodo }, { to: '/notes', label: 'Notes', icon: FileText }, { to: '/reminders', label: 'Reminders', icon: Bell }, { to: '/notifications', label: 'Notifications', icon: Bell }, { to: '/settings', label: 'Settings', icon: Settings }] as const
+  return <div className="app" data-accent={workspace?.profile?.accent ?? 'cyan'} data-motion={workspace?.profile?.reducedMotion ? 'reduced' : 'full'}>
+    <aside className={`sidebar ${menu ? 'is-open' : ''}`}><button className="icon-button mobile-close" aria-label="Close navigation" onClick={() => setMenu(false)}><X size={20}/></button><Link to="/" className="logo-link" aria-label="JARVIS dashboard"><div className="brand-mark">J<span>Λ</span>RVIS<span className="brand-dot">.</span></div><div className="brand-subtitle">PERSONAL INTELLIGENCE</div></Link><div className="nav-label">WORKSPACE</div><nav className="nav-links">{nav.map(item => <Link key={item.to} to={item.to} className="nav-link" activeProps={{ className: 'nav-link active' }} activeOptions={{ exact: true }} onClick={() => setMenu(false)}><item.icon size={17}/>{item.label}</Link>)}</nav><div className="sidebar-bottom"><div className="private-box"><div className="private-title"><ShieldCheck size={14}/> Your world. Kept private.</div><p>No external AI or notifications.<br/>Your workspace, your account.</p></div><div className="sidebar-user"><div className="avatar">{name.split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase()}</div><div><div className="user-name">{name}</div><div className="user-caption">{workspace ? 'Personal workspace' : 'Fictional demo profile'}</div></div>{workspace ? <button className="icon-button" aria-label={signout.pending ? 'Signing out' : 'Sign out'} title="Sign out" onClick={() => signout.run()}><LogOut size={16}/></button> : <Link to="/login" className="icon-button" aria-label="Sign in"><LogOut size={16}/></Link>}</div>{signout.pending && <p className="hint">Signing out…</p>}<p className="error" role="alert">{signout.error}</p></div></aside>
+    {menu && <button className="mobile-shade" aria-label="Close navigation" onClick={() => setMenu(false)}/>}
+    <div className="app-main"><header className="topbar"><div className="breadcrumb"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={() => setMenu(true)}><Menu size={20}/></button><span>Workspace</span><ChevronRight size={12}/><strong>{page}</strong></div><div className="topbar-right"><VoiceControls workspace={workspace}/><span className="status"><span className="status-dot"/> All systems ready</span><span className="topbar-tag">JARVIS V1.0</span><button className="icon-button" aria-label="Help and supported commands" onClick={() => setHelp(true)}><CircleHelp size={17}/></button></div></header><main className="page">{workspace && !workspace.profile && <div className="notice">Finish setting up your name and phone number. <Link to="/login">Complete your profile</Link></div>}{children}<footer className="app-footer"><span className="footer-left"><Cpu size={12}/> JARVIS PERSONAL ASSISTANT <span> / </span> YOUR DAY, SIMPLIFIED.</span><span>BUILT FOR FOCUS. DESIGNED FOR YOU.</span></footer></main></div>
+    {help && <Modal title="Your JARVIS field guide" onClose={() => setHelp(false)}><p className="muted">JARVIS organizes your tasks, notes, and reminders with built-in command rules. No external AI, live data, or notification services are used.</p><ul className="help-list"><li>Add a task to finish my assignment.</li><li>Show my pending tasks.</li><li>Create a note.</li><li>Show my reminders.</li><li>Mark finish my assignment as completed.</li></ul><p className="hint">Use Tasks, Notes, and Reminders for full editing controls. Phone entry is not identity verification.</p><button className="btn-primary" onClick={() => setHelp(false)}>Got it</button></Modal>}
+  </div>
+}

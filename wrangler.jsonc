@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jarvis-assistant",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "main": "@tanstack/react-start/server-entry",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jarvis-assistant-db",
+      "database_id": "e16c15e1-e298-497b-a495-014bb2d9c3fd",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

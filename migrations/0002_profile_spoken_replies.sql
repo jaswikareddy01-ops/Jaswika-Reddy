@@ -1,0 +1,1 @@
+ALTER TABLE profiles ADD COLUMN spoken_replies INTEGER NOT NULL DEFAULT 0;
